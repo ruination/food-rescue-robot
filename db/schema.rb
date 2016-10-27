@@ -50,6 +50,11 @@ ActiveRecord::Schema.define(:version => 20150623180213) do
     t.boolean  "active",     :default => true, :null => false
   end
 
+  create_table "food_types_schedules", :force => true do |t|
+    t.integer "food_type_id"
+    t.integer "schedule_id"
+  end
+
   create_table "locations", :force => true do |t|
     t.string   "recip_category"
     t.string   "donor_type"

@@ -61,6 +61,7 @@ GEM
     aws-sdk-resources (2.3.9)
       aws-sdk-core (= 2.3.9)
     bcrypt (3.1.11)
+    bcrypt (3.1.11-x64-mingw32)
     better_errors (2.1.1)
       coderay (>= 1.0.0)
       erubis (>= 2.6.6)
@@ -112,6 +113,7 @@ GEM
     equalizer (0.0.10)
     erubis (2.7.0)
     eventmachine (1.2.0.1)
+    eventmachine (1.2.0.1-x64-mingw32)
     exception_notification (3.0.1)
       actionmailer (>= 3.0.4)
     exception_notification-rake (0.0.6)
@@ -175,9 +177,12 @@ GEM
     naught (1.1.0)
     nokogiri (1.6.7.2)
       mini_portile2 (~> 2.0.0.rc2)
+    nokogiri (1.6.7.2-x64-mingw32)
+      mini_portile2 (~> 2.0.0.rc2)
     orm_adapter (0.5.0)
     pdf-core (0.6.1)
     pg (0.18.4)
+    pg (0.18.4-x64-mingw32)
     polyglot (0.3.5)
     prawn (2.1.0)
       pdf-core (~> 0.6.1)
@@ -303,6 +308,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)
+    unf_ext (0.0.7.2-x64-mingw32)
     warden (1.2.6)
       rack (>= 1.0)
     xpath (2.0.0)
@@ -313,6 +319,7 @@ GEM
 
 PLATFORMS
   ruby
+  x64-mingw32
 
 DEPENDENCIES
   active_scaffold
@@ -358,5 +365,8 @@ DEPENDENCIES
   uglifier (>= 1.0.3)
   yaml_db
 
+RUBY VERSION
+   ruby 2.2.5p319
+
 BUNDLED WITH
-   1.11.2
+   1.13.6

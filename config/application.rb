@@ -58,5 +58,9 @@ module Webapp
 
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
+
+    config.sass.load_paths ||= []
+    config.sass.load_paths << "#{Gem.loaded_specs['bootstrap-sass'].full_gem_path}/assets/stylesheets"
+    config.sass.load_paths << "#{Gem.loaded_specs['bootstrap-sass'].full_gem_path}/assets/stylesheets/bootstrap"
   end
 end
