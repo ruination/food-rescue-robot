@@ -31,11 +31,10 @@
           <th>Date</th>
           <th>Link</th>
         </tr>
-        <% @upcoming_pickups.each do |pickup_group|
-           first_pickup = pickup_group[0] %>
+        <% @upcoming_pickups.each do |shift| %>
            <tr class="bordered">
             <td>
-              <% pickup_group.each{ |pickup| %>
+              <% shift.logs.each{ |pickup| %>
                 <%= link_to pickup.donor.try(:name), pickup.donor if pickup.donor.present? %> -&gt;
                   <% pickup.recipients.each do |recip| %>
                     <%= link_to recip.try(:name), recip if recip.present? %>
@@ -48,11 +47,11 @@
               <% } %>
             </td>
             <td>
-              <%= readable_time_until first_pickup %>
+              <%= readable_time_until shift.first_log %>
             </td>
             <td>
-              <% unless first_pickup.schedule_chain.nil? %>
-                <button class="btn btn-info info" onclick="window.location='/schedule_chains/<%= first_pickup.schedule_chain.id %>';">
+              <% unless shift.schedule_chain.nil? %>
+                <button class="btn btn-info info" onclick="window.location='/schedule_chains/<%= shift.schedule_chain.id %>';">
                   <i class="fa fa-info-circle"></i>
                   Info
                 </button>
@@ -124,13 +123,12 @@
         </thead>
         <tbody>
           <% n = 0
-          @sncs_pickups.each do |pickup_group|
-            next if pickup_group.all? {|x| x.donor.nil? or x.recipients.empty? }
-            first_pickup = pickup_group[0]
+          @sncs_pickups.each do |shift|
+            next if shift.logs.all? {|x| x.donor.nil? or x.recipients.empty? }
             %>
             <tr class="bordered">
               <td>
-                <% pickup_group.each{ |pickup| %>
+                <% shift.logs.each{ |pickup| %>
                 <% next if pickup.donor.nil? or pickup.recipients.empty? %>
                 <%= link_to pickup.donor.name, pickup.donor %> -&gt; <% pickup.recipients.each do |recip| %> <%=link_to recip.name, recip %> <% end %>
                 <% unless pickup.food_types.empty? %>
@@ -141,17 +139,17 @@
                 <% } %>
               </td>
               <td>
-                <%= readable_time_until first_pickup %>
+                <%= readable_time_until shift.first_log %>
               </td>
               <td>
-                <button class="btn btn-primary take" onclick="window.location='<%= take_log_path(first_pickup.id,:ids => pickup_group.collect{ |p| p.id }) %>';">
+                <button class="btn btn-primary take" onclick="window.location='<%= take_log_path(shift.first_log,:ids => shift.log_ids) %>';">
                   <i class="fa fa-hand-rock-o"></i>
                   Take
                 </button>
               </td>
               <td>
-                <% if first_pickup.schedule_chain.present? %>
-                  <button class="btn btn-info info" onclick="window.location='/schedule_chains/<%= first_pickup.schedule_chain.id %>';">
+                <% if shift.schedule_chain.present? %>
+                  <button class="btn btn-info info" onclick="window.location='/schedule_chains/<%= shift.schedule_chain.id %>';">
                     <i class="fa fa-info-circle"></i>
                     Info
                   </button>
@@ -169,51 +167,11 @@
 
 <div class="row bordered-bottom">
   <div class="col-sm-6">
-    <h2>Pickup Stats</h2>
-
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th> Stat </th>
-          <th> Value </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td> Stats Start Date </td>
-          <td> <%= @earliest == nil ? "No Pickups Logged" : @earliest.when %> </td>
-        </tr>
-        <tr>
-          <td> Completed Pickups </td>
-          <td> <%= @completed_pickup_count %> </td>
-        </tr>
-        <tr>
-          <td> Amount of Food Rescued </td>
-          <td> <%= @total_food_rescued %> lbs</td>
-        </tr>
-        <tr>
-          <td> Weekly Avg </td>
-          <td> <%= sprintf("%.02f", @earliest != nil ? (@lbs/((Time.zone.today-(@earliest.when))/7.0)): "0" ) %> lbs</td>
-        </tr>
-        <tr>
-          <td> Pickup Avg </td>
-          <td> <%= sprintf('%.02f',@lbs/@pickups.length.to_f) %> lbs</td>
-        </tr>
-        <tr>
-          <td> % Human Powered </td>
-          <% if @human_pct > -1 %>
-          <td> <%= @human_pct.round %>%<%= @human_pct > 90 ? " :)" : "" %> </td>
-          <% else %>
-          <td> You have no pickups logged </td>
-          <% end %>
-        </tr>
-      </tbody>
-    </table>
+    <%= render partial: 'pickup_stats', locals: { presenter: @volunteer_stats_presenter.pickup_stats } %>
   </div>
 
   <div class="col-sm-6">
-    <h2> Food Collected by Month </h2>
-    <div id="highchart"></div>
+    <%= render partial: 'food_by_month', locals: { presenter: @volunteer_stats_presenter.lbs_by_month_graph } %>
   </div>
 
   <div class="col-sm-6">
@@ -287,29 +245,3 @@
     </table>
   </div>
 </div>
-
-<% content_for :scripts do %>
-  <script type="text/javascript">
-    $(function () {
-      $('#highchart').highcharts({
-        chart: {
-          type: 'column'
-        },
-        title: {
-          text: 'Monthly Stats'
-        },
-        xAxis: {
-          title: { text: 'Month' },
-          categories: ['<%= raw @by_month.sort_by{ |k,v| k}.collect{ |pair| pair[0] }.join("','") %>']
-        },
-        yAxis: {
-          title: { text: 'Pounds' }
-        },
-        series: [{
-          name: 'Food Rescued',
-          data: [<%= @by_month.sort_by{ |k,v| k}.collect{ |pair| pair[1] }.join(",") %>]
-        }]
-      });
-    });
-  </script>
-<% end %>

@@ -1,11 +1,5 @@
-Webapp::Application.config.DayOfWeek = [["Unknown/varies",nil],["Sunday",0],["Monday",1],["Tuesday",2],["Wednesday",3],["Thursday",4],["Friday",5],["Saturday",6]]
-
 # add some useful functions to the array class
 class Array
-  def sum
-    inject( 0.0 ) { |sum,x| sum ? sum+x : x }
-  end
-
   def mean
     size == 0 ? nil : sum / size
   end
@@ -24,7 +18,7 @@ class Array
 
   def std
     mu = mean
-    (size < 2) ? 0.0 : Math.sqrt(inject(0.0){ |sum,x| sum + (x-mu)**2 } / size)
+    (size < 2) ? 0.0 : Math.sqrt(inject(0.0){ |sum, x| sum + (x-mu)**2 } / size)
   end
 
   def rmse
@@ -37,4 +31,3 @@ class Array
     end
   end
 end
-

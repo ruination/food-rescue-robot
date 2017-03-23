@@ -2,7 +2,7 @@ class FoodTypesController < ApplicationController
   before_filter :authenticate_volunteer!
 
   def index
-    @food_types = FoodType.where("region_id IN (#{current_volunteer.region_ids.join(",")})")
+    @food_types = FoodType.accessible_by(current_ability)
     respond_to do |format|
       format.json { render json: @food_types.to_json }
       format.html { render :index }
@@ -11,7 +11,7 @@ class FoodTypesController < ApplicationController
 
   def destroy
     @l = FoodType.find(params[:id])
-    return unless check_permissions(@l)
+    authorize! :destroy, @l
     @l.active = false
     @l.save
     redirect_to(request.referrer)
@@ -20,17 +20,17 @@ class FoodTypesController < ApplicationController
   def new
     @food_type = FoodType.new
     @food_type.region_id = params[:region_id]
-    @action = "create"
-    return unless check_permissions(@food_type)
+    @action = 'create'
+    authorize! :create, @food_type
     session[:my_return_to] = request.referer
     render :new
   end
 
   def create
     @food_type = FoodType.new(params[:food_type])
-    return unless check_permissions(@food_type)
+    authorize! :create, @food_type
     if @food_type.save
-      flash[:notice] = "Created successfully."
+      flash[:notice] = 'Created successfully.'
       unless session[:my_return_to].nil?
         redirect_to(session[:my_return_to])
       else
@@ -44,36 +44,26 @@ class FoodTypesController < ApplicationController
 
   def edit
     @food_type = FoodType.find(params[:id])
-    return unless check_permissions(@food_type)
-    @action = "update"
+    authorize! :update, @food_type
+    @action = 'update'
     session[:my_return_to] = request.referer
     render :edit
   end
 
   def update
     @food_type = FoodType.find(params[:id])
-    return unless check_permissions(@food_type)
+    authorize! :update, @food_type
     # can't set admin bits from CRUD controls
     if @food_type.update_attributes(params[:food_type])
-      flash[:notice] = "Updated Successfully."
+      flash[:notice] = 'Updated Successfully.'
       unless session[:my_return_to].nil?
         redirect_to(session[:my_return_to])
       else
         index
       end
     else
-      flash[:error] = "Update failed :("
+      flash[:error] = 'Update failed :('
       render :edit
     end
   end
-
-  def check_permissions(l)
-    unless current_volunteer.super_admin? or (current_volunteer.admin_region_ids.include? l.region_id) or
-      flash[:error] = "Not authorized to create/edit/delete food_types for that region"
-      redirect_to(root_path)
-      return false
-    end
-    return true
-  end
-
 end

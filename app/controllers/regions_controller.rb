@@ -1,93 +1,69 @@
 class RegionsController < ApplicationController
-  before_filter :authenticate_volunteer!, :except => [:recipients, :request_rescue]
-  before_filter :super_admin_only, :except => [:recipients, :request_rescue, :edit, :update]
-
-  def super_admin_only
-    unless current_volunteer.super_admin?
-      flash[:notice] = "Sorry, you can't go there"
-      redirect_to(root_path)
-    end
-  end
+  before_filter :authenticate_volunteer!
 
   def index
-    @regions = Region.all
-    @header = "All Regions"
-    render :index
-  end
-
-  def edit
-    @region = Region.find(params[:id])
-    unless current_volunteer.region_admin?(@region, false)
-      flash[:notice] = "Sorry, you can't go there"
-      return redirect_to(root_path)
-    end
-    render :edit
-  end
-
-  def update
-    @region = Region.find(params[:id])
-
-    unless current_volunteer.region_admin?(@region, false) # false means super admins can edit
-      flash[:notice] = "Sorry, you can't go there"
-      return redirect_to(root_path)
-    end
-
-    flash[:notice] = if @region.update_attributes(params[:region])
-                       'Updated Successfully.'
-                     else
-                       'Update failed :('
-                     end
-
-    render :edit
+    authorize! :read, Region
+    @regions = Region.accessible_by(current_ability)
   end
 
   def new
     @region = Region.new
-    render :new
+    authorize! :create, @region
   end
 
   def create
     @region = Region.new(params[:region])
+    authorize! :create, @region
+
     if @region.save
-      flash[:notice] = 'Created successfully.'
-      index
+      flash[:notice] = 'Created successfully'
+      redirect_to regions_url
     else
-      flash[:notice] = "Didn't save successfully :("
+      flash.now[:error] = 'Create failed'
       render :new
     end
   end
 
-  def recipients
+  def edit
     @region = Region.find(params[:id])
-    @locations = Location.recipients.where(:region_id=>@region.id)
-    @json = @locations.to_gmaps4rails do |loc, marker|
-      marker.infowindow render_to_string(:template => "locations/_details.html", :layout=>nil, :locals => { :loc => loc}).html_safe
-      marker.picture({
-        "picture" => loc.open? ? 'http://maps.google.com/mapfiles/marker_green.png' : 'http://maps.google.com/mapfiles/marker.png',
-        "width" =>  '32', "height" => '37'
-      })
+    authorize! :update, @region
+  end
+
+  def update
+    @region = Region.find(params[:id])
+    authorize! :update, @region
+
+    if @region.update_attributes(params[:region])
+      flash.now[:notice] = 'Updated successfully'
+      redirect_to edit_region_url(@region)
+    else
+      flash.now[:error] = 'Update failed'
+      render :edit
     end
   end
 
+  def destroy
+    region = Region.find(params[:id])
+    authorize! :destroy, region
+    region.destroy
+
+    flash.now[:notice] = 'Deleted successfully'
+    redirect_to regions_url
+  end
+
+  # Currently not implemented correctly
+  # Commented out as a route by Rylan Bowers 2-7-2017
   def request_rescue
     @region = Region.find(params[:id])
     set_vars_for_form @region
     @schedule = Schedule.new
     @time_options = []
-    ['am','pm'].each do |ampm|
+    %w(am pm).each do |ampm|
       (1..12).each do |hour|
-        ['00','30'].each do |min|
+        %w(00 30).each do |min|
           @time_options << hour.to_s+':'+min+' '+ampm
         end
       end
     end
   end
-
-  def destroy
-    @r = Region.find(params[:id])
-    @r.destroy
-    index
-  end
-
-
 end

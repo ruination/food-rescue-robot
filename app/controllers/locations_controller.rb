@@ -5,11 +5,11 @@ class LocationsController < ApplicationController
     @loc = Location.find(params[:id])
     if (params[:key] == @loc.receipt_key) or (!current_volunteer.nil? and (current_volunteer.region_admin?(@loc.region) or current_volunteer.super_admin?))
       @schedules = ScheduleChain.for_location(@loc)
-      if @loc.is_donor
-        @logs = Log.at(@loc)
-      else
-        @logs = Log.at(@loc).keep_if{ |x| x.weight_sum.to_f > 0 }
-      end
+      @logs = if @loc.is_donor
+                Log.at(@loc)
+              else
+                Log.at(@loc).keep_if{ |x| x.weight_sum.to_f > 0 }
+              end
       render :hud
     else
       flash[:notice] = "Sorry, the key you're using is expired or you're not authorized to do that"
@@ -18,39 +18,35 @@ class LocationsController < ApplicationController
     end
   end
 
-  def donors
-    index(Location::LocationType.invert["Donor"],"Donors")
-  end
-
   def hubs
-    index(Location::LocationType.invert["Hub"],"Hubs")
+    index(Location::LOCATION_TYPES.invert['Hub'], 'Hubs')
   end
 
   def buyers
-    index(Location::LocationType.invert["Buyer"],"Buyers")
+    index(Location::LOCATION_TYPES.invert['Buyer'], 'Buyers')
   end
 
   def sellers
-    index(Location::LocationType.invert["Seller"],"Sellers")
+    index(Location::LOCATION_TYPES.invert['Seller'], 'Sellers')
   end
 
   def recipients
-    index(Location::LocationType.invert["Recipient"],"Recipients")
+    index(Location::LOCATION_TYPES.invert['Recipient'], 'Recipients')
   end
 
-  def index(location_type=nil,header="Locations")
-    unless location_type.nil?
-      @locations = Location.regional(current_volunteer.region_ids).where("location_type = ?",location_type)
-    else
-      @locations = Location.regional(current_volunteer.region_ids)
-    end
+  def index(location_type=nil, header='Locations')
+    @locations = unless location_type.nil?
+                   Location.regional(current_volunteer.region_ids).where('location_type = ?', location_type)
+                 else
+                   Location.regional(current_volunteer.region_ids)
+                 end
     @header = header
     @regions = Region.all
-    if current_volunteer.super_admin?
-      @my_admin_regions = @regions
-    else
-      @my_admin_regions = current_volunteer.assignments.collect{ |a| a.admin ? a.region : nil }.compact
-    end
+    @my_admin_regions = if current_volunteer.super_admin?
+                          @regions
+                        else
+                          current_volunteer.assignments.collect{ |a| a.admin ? a.region : nil }.compact
+                        end
     render :index
   end
 
@@ -72,7 +68,7 @@ class LocationsController < ApplicationController
 
   def destroy
     @l = Location.find(params[:id])
-    return unless check_permissions(@l)
+    authorize! :destroy, @l
     @l.active = false
     @l.save
     redirect_to(request.referrer)
@@ -81,28 +77,19 @@ class LocationsController < ApplicationController
   def new
     @location = Location.new
     @location.region_id = params[:region_id]
-    return unless check_permissions(@location)
-    @action = "create"
+    authorize! :create, @location
+    @action = 'create'
     session[:my_return_to] = request.referer
     render :new
-  end
-
-  def check_permissions(l)
-    unless current_volunteer.super_admin? or (current_volunteer.admin_region_ids.include? l.region_id) or
-      flash[:notice] = "Not authorized to create/edit locations for that region"
-      redirect_to(root_path)
-      return false
-    end
-    return true
   end
 
   def create
     @location = Location.new(params[:location])
     @location.populate_detailed_hours_from_form params
-    return unless check_permissions(@location)
+    authorize! :create, @location
     # can't set admin bits from CRUD controls
     if @location.save
-      flash[:notice] = "Created successfully."
+      flash[:notice] = 'Created successfully.'
       unless session[:my_return_to].nil?
         redirect_to(session[:my_return_to])
       else
@@ -116,8 +103,8 @@ class LocationsController < ApplicationController
 
   def edit
     @location = Location.find(params[:id])
-    return unless check_permissions(@location)
-    @action = "update"
+    authorize! :update, @location
+    @action = 'update'
     session[:my_return_to] = request.referer
     render :edit
   end
@@ -125,17 +112,17 @@ class LocationsController < ApplicationController
   def update
     @location = Location.find(params[:id])
     @location.populate_detailed_hours_from_form params
-    return unless check_permissions(@location)
+    authorize! :update, @location
     # can't set admin bits from CRUD controls
     if @location.update_attributes(params[:location])
-      flash[:notice] = "Updated Successfully."
+      flash[:notice] = 'Updated Successfully.'
       unless session[:my_return_to].nil?
         redirect_to session[:my_return_to]
       else
         index
       end
     else
-      flash[:error] = "Update failed :("
+      flash[:error] = 'Update failed :('
       render :edit
     end
   end

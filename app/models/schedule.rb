@@ -1,8 +1,6 @@
 class Schedule < ActiveRecord::Base
-
   include RankedModel
 
-  has_many :volunteers, through: :schedule_volunteers
   has_many :logs
 
   belongs_to :location
@@ -19,11 +17,10 @@ class Schedule < ActiveRecord::Base
                   :schedule_chain_id, :position
 
   def is_pickup_stop?
-    location.nil? ? false : Location::PickupLocationTypes.include?(location.location_type)
+    location.nil? ? false : Location::PICKUP_LOCATION_TYPES.include?(location.location_type)
   end
 
   def is_drop_stop?
-    location.nil? ? false : Location::DropLocationTypes.include?(location.location_type)
+    location.nil? ? false : Location::DROP_LOCATION_TYPES.include?(location.location_type)
   end
-
 end

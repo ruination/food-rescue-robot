@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>The Food Rescue Robot</title>
-  <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
-  <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="//yui.yahooapis.com/3.5.1/build/cssreset/cssreset-min.css">
+  <link href='//fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
   <link rel="shortcut icon" href="/favicon.ico" type="image/ico" />
   <%= stylesheet_link_tag "application", :media => "all" %>
   <%= csrf_meta_tags %>
@@ -27,7 +27,7 @@
           by Boulder Food Rescue, the robot is now used by multiple organizations around the world, fighting malnutrition
           and food waste with love, community, and bicycles. If you'd like to start a food rescue group in your town, shoot
           an email to info at boulder food rescue dot org and we can set you up with an account on here. If you're a super-diy
-          sort and want to hack on the source <a href="https://github.com/somerandomsequence/food-rescue-robot">you can do that too</a>.
+          sort and want to hack on the source <a href="https://github.com/boulder-food-rescue/food-rescue-robot">you can do that too</a>.
         </p>
 
         <h2 class="section_title">Facts</h2>
@@ -42,13 +42,13 @@
             <li>
               <strong>Total Food Pickups To Date:</strong>
               <span class="label label-success">
-                <%= number_to_human(Log.where("complete").count) %> pickups
+                <%= number_to_human(Log.complete.count) %> pickups
               </span>
             </li>
             <li>
               <strong>Total Food Rescued:</strong>
               <span class="label label-success">
-                <%= number_to_human(Log.joins(:log_parts).where("complete").sum("weight")) %> lbs
+                <%= number_to_human(Log.complete.joins(:log_parts).sum(:weight)) %> lbs
               </span>
             </li>
             <li>
@@ -60,13 +60,13 @@
             <li>
               <strong>Number of Recipient Organizations:</strong>
               <span class="label label-success">
-                <%= number_to_human(Location.where("location_type = ?",Location::LocationType.invert["Recipient"]).count) %>
+                <%= number_to_human(Location.recipients.count) %>
               </span>
             </li>
             <li>
               <strong>Number of Donor Organizations:</strong>
               <span class="label label-success">
-                <%= number_to_human(Location.where("location_type = ?",Location::LocationType.invert["Donor"]).count) %>
+                <%= number_to_human(Location.donors.count) %>
               </span>
             </li>
           </ul>
@@ -86,6 +86,8 @@
     </div>
   </div>
   <%= javascript_include_tag "application" %>
+  <%= javascript_include_tag "google_analytics" if Rails.env.production? %>
+
 
 </body>
 </html>

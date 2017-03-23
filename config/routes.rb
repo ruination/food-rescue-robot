@@ -1,23 +1,12 @@
 Webapp::Application.routes.draw do
 
-  resources :home do
+  resources :assignments, only: [] do
     collection do
-      get :welcome
-    end
-  end
-
-  resources :assignments do
-    collection do
-      get :index
       get :knight
     end
   end
 
-  resources :regions do
-    get 'recipients', :on => :member
-    get 'request_rescue', :on => :member
-    as_routes
-  end
+  resources :regions, except: [:show]
 
   resources :cell_carriers do as_routes end
   resources :transport_types do as_routes end
@@ -83,7 +72,6 @@ Webapp::Application.routes.draw do
 
   resources :locations do
     collection do
-      get :donors
       get :recipients
       get :hubs
       get :sellers
@@ -93,11 +81,14 @@ Webapp::Application.routes.draw do
       get :update
       get :create
       get :destroy
+    end
+
+    member do
       get :hud
     end
   end
 
-  devise_for :volunteers, :controllers => { :sessions => "sessions" }
+  devise_for :volunteers, :controllers => { :sessions => 'sessions' }
 
   resources :volunteers do
     collection do
@@ -118,13 +109,17 @@ Webapp::Application.routes.draw do
       get :update
       get :create
       get :destroy
-      get :waiver
-      get :sign_waiver
       get :assign
     end
     member do
       get :reactivate
     end
+  end
+
+  resource :waiver, only: [:new, :create]
+
+  namespace :region_admin do
+    resources :donors, only: [:index]
   end
 
   devise_scope :volunteer do
